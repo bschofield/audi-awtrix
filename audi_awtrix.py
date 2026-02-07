@@ -222,9 +222,12 @@ async def main():
                 if home_lat is not None and home_lon is not None:
                     parking_data = await get_parking_position(audi, vin)
                     if parking_data is None:
-                        # Car is driving
+                        # Car is driving - use current time
+                        from datetime import datetime
                         icon = BATTERY_ICON_DRIVING
-                        status_msg = "driving"
+                        time_suffix = datetime.now().strftime("%H%M")
+                        location = time_suffix
+                        status_msg = f"driving - {time_suffix}"
                     else:
                         # Car is parked, check if away from home
                         car_lat = parking_data["data"]["lat"]
@@ -235,10 +238,19 @@ async def main():
                             icon = BATTERY_ICON_PARKED
                             # Get location name for display
                             location = reverse_geocode(car_lat, car_lon)
+
+                            # Get timestamp from parking data
+                            from datetime import datetime
+                            parking_time_str = parking_data["data"]["timestamp"]
+                            parking_time = datetime.fromisoformat(parking_time_str.replace('Z', '+00:00'))
+                            time_suffix = parking_time.strftime("%H%M")
+
                             if location:
-                                status_msg = f"parked at {location}"
+                                location = f"{location} - {time_suffix}"
+                                status_msg = f"parked - {location}"
                             else:
-                                status_msg = f"parked {int(distance)}m from home"
+                                location = time_suffix
+                                status_msg = f"parked {int(distance)}m from home - {time_suffix}"
                         else:
                             status_msg = f"at home, {status_msg}"
 
