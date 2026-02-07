@@ -7,6 +7,7 @@ import sys
 import sqlite3
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 import requests
 from audi_connect import AudiConnect, log
 
@@ -128,7 +129,7 @@ def init_geocode_cache(cache_file: Path):
     conn.close()
 
 
-def get_cached_geocode(lat: float, lon: float, cache_file: Path | None) -> str | None:
+def get_cached_geocode(lat: float, lon: float, cache_file: Optional[Path]) -> Optional[str]:
     """Get cached reverse geocode result if available. Updates timestamp for LRU."""
     if cache_file is None:
         return None
@@ -160,7 +161,7 @@ def get_cached_geocode(lat: float, lon: float, cache_file: Path | None) -> str |
         return None
 
 
-def cache_geocode(lat: float, lon: float, location: str, cache_file: Path | None):
+def cache_geocode(lat: float, lon: float, location: str, cache_file: Optional[Path]):
     """Cache a reverse geocode result with LRU eviction."""
     if cache_file is None:
         return
@@ -198,7 +199,7 @@ def cache_geocode(lat: float, lon: float, location: str, cache_file: Path | None
         pass  # Silently ignore cache errors
 
 
-def reverse_geocode(lat: float, lon: float, cache_file: Path | None = None) -> str:
+def reverse_geocode(lat: float, lon: float, cache_file: Optional[Path] = None) -> Optional[str]:
     """Get location name from coordinates using Nominatim API.
 
     Returns formatted location as "Street Name, Town" or None if request fails.
