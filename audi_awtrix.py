@@ -40,7 +40,7 @@ HTTP_TIMEOUT = 5  # seconds
 
 # Color definitions
 COLOR_HIGH_SOC = "#00FF00"  # Green (>= 60%)
-COLOR_MID_SOC = "#FFA500"  # Orange (21-59%)
+COLOR_MID_SOC = "#FF6600"  # Orange (21-59%)
 COLOR_LOW_SOC = "#FF0000"  # Red (<= 20%)
 
 
@@ -154,9 +154,10 @@ def push_app(awtrix_url: str, name: str, soc: int, charging: bool, icon: str = N
         icon = BATTERY_ICON_CHARGING if charging else soc_icon(soc)
 
     # Format text with optional location
-    text = f"{name} {soc}%"
     if location:
-        text = f"{name} {soc}% - {location}"
+        text = f"{name} - {soc}% - {location}"
+    else:
+        text = f"{name} {soc}%"
 
     payload = {
         "text": text,
