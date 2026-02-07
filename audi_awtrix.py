@@ -26,7 +26,7 @@ PARKING_URL = "https://emea.bff.cariad.digital/vehicle/v1/vehicles/{vin}/parking
 X_CLIENT_ID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
 
 # Display configuration
-DURATION_AT_HOME = 10  # seconds
+DURATION_AT_HOME = 5  # seconds
 DURATION_AWAY = 30  # seconds
 DISPLAY_LIFETIME = 1800  # seconds (30 minutes)
 DISPLAY_TEXT_CASE = 2  # AWTRIX text case (0=global setting, 1=uppercase, 2=as sent)
