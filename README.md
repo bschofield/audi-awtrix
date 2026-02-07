@@ -6,7 +6,7 @@ This project polls your Audi's State of Charge (SoC) from the Audi Connect API a
 
 This was thrown together using Claude.
 
-![Example Display](https://via.placeholder.com/400x100?text=Q4+85%25+%E2%9A%A1)
+![Example Display](awtrix.png)
 
 ## Features
 
