@@ -1,195 +1,123 @@
 # Audi AWTRIX Battery Monitor
 
-Display your Audi electric vehicle's battery status on an AWTRIX 3 display (Ulanzi TC001).
-
-This project polls your Audi's State of Charge (SoC) from the Audi Connect API and displays it on your AWTRIX clock with custom battery icons and color-coded status.
-
-This was thrown together using Claude.
+Display your Audi EV battery status on an AWTRIX 3 display (Ulanzi TC001) with location awareness.
 
 ![Example Display](awtrix.png)
 
 ## Features
 
-- Battery percentage display
-- Visual battery level icons / charging status
-- Color-coded battery levels (green / orange / red)
-- Progress bar showing charge level (full = 80%)
-- Support for multiple vehicles
-- Automatic token management and refresh
+- **Battery display**: Percentage, color-coded levels (green/orange/red), progress bar
+- **Location awareness**: Shows different icons and info when at home, driving, or parked away
+- **Reverse geocoding**: Displays street and town when parked away from home
+- **Smart timestamps**: Shows time for recent parking, "yesterday" or "n days ago" for older
+- **Dynamic duration**: 5s display at home, 30s when away (more time to read location info)
+- **Multi-vehicle support**: Track multiple Audis with custom names
 
 ## Requirements
 
-### Hardware
-
-- **Ulanzi TC001** (AWTRIX 3 compatible display)
-- One or more **Audi electric vehicles** with Audi Connect
-
-### Software
-
-- Python 3.7+
-- Required Python packages:
-
-  **Ubuntu/Debian:**
-
-  ```bash
-  sudo apt install python3-aiohttp python3-requests
-  ```
-
-  **Other systems (via pip):**
-
-  ```bash
-  pip install aiohttp requests
-  ```
-
-### Audi Connect
-
-- Active Audi Connect subscription
-- Valid Audi Connect account credentials
+- Ulanzi TC001 with AWTRIX 3 firmware
+- Audi EV with active Audi Connect subscription
+- Python 3.7+ with `aiohttp` and `requests` packages
 
 ## Installation
 
-1. Clone this repository:
-
+1. Install dependencies:
    ```bash
-   git clone https://github.com/yourusername/audi-awtrix.git
-   cd audi-awtrix
+   sudo apt install python3-aiohttp python3-requests  # Ubuntu/Debian
+   # or: pip install aiohttp requests
    ```
 
-2. Install dependencies:
+2. Download required AWTRIX icons (via AWTRIX web UI → Icons):
+   - **Battery levels**: 6354, 6355, 6356, 6357, 6358
+   - **Charging**: 21585
+   - **Driving**: 1172
+   - **Parked**: 70271
 
-   **Ubuntu/Debian:**
-
+3. (Optional) Disable default AWTRIX apps:
    ```bash
-   sudo apt install python3-aiohttp python3-requests
+   curl -X POST http://192.168.1.x/api/settings -H 'Content-Type: application/json' \
+     -d '{"TIM": false, "DAT": false, "HUM": false, "TEMP": false, "BAT": false}'
    ```
 
-   **Other systems (via pip):**
+## Configuration
 
-   ```bash
-   pip install aiohttp requests
-   ```
+Create `audi_awtrix_config.json`:
 
-3. Create a configuration file e.g. `audi_awtrix_config.json`:
-
-   ```json
-   {
-     "username": "your.email@example.com",
-     "password": "your_password",
-     "awtrix_ip": "192.168.1.x",
-     "vehicles": {
-       "WAUXXXXXXXXXXXXXX": "Q4",
-       "WAUXXXXXXXXXXXXXX": "Q6",
-       "WAUXXXXXXXXXXXXXX": "Q8",
-       "WAUXXXXXXXXXXXXXX": "GT"
-     }
-   }
-   ```
-
-   Replace:
-   - `username` and `password` with your Audi Connect credentials
-   - `awtrix_ip` with your Ulanzi TC001's IP address
-   - Vehicle VINs and friendly names in the `vehicles` section
-
-## AWTRIX Setup
-
-### Download Battery Icons
-
-The script uses specific battery icons that need to be downloaded to your TC001 using the AWTRIX web UI ("Icons" section):
-
-- 6354
-- 6355
-- 6356
-- 6357
-- 6538
-- 21585
-
-### Disable Default AWTRIX Apps
-
-To prevent the default AWTRIX apps from interfering with your custom battery display:
-
-```bash
-curl -X POST http://192.168.1.x/api/settings -H 'Content-Type: application/json' -d '{"TIM": false, "DAT": false, "HUM": false, "TEMP": false, "BAT": false}'
+```json
+{
+  "username": "your.email@example.com",
+  "password": "your_password",
+  "awtrix_ip": "192.168.1.x",
+  "home": {
+    "lat": 53.896171,
+    "lon": -0.962557
+  },
+  "vehicles": {
+    "WAUXXXXXXXXXXXXXX": "Q4",
+    "WAUXXXXXXXXXXXXXX": "GT"
+  }
+}
 ```
 
-This disables the built-in Time, Date, Humidity, Temperature, and Battery apps.
+- `home`: Your home coordinates (enables location features). Get from Google Maps or similar.
+- `vehicles`: Map of VIN → display name
 
 ## Usage
 
-Run the script manually:
-
+Run manually:
 ```bash
 python3 audi_awtrix.py -c audi_awtrix_config.json
 ```
 
-### Automated Updates with Cron
-
-To update your display every 15 minutes, add this to your crontab (`crontab -e`):
-
+Automate with cron (every 15 minutes):
 ```cron
-*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py --config /path/to/audi_awtrix_config.json > /tmp/audi_awtrix.log 2>&1
+*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/audi_awtrix_config.json > /tmp/audi_awtrix.log 2>&1
 ```
 
-Replace `/path/to/` with your actual paths.
+## Display Behavior
 
-## How It Works
+### At Home
+- Shows: `Q4 75%`
+- Icon: Battery level or charging icon
+- Duration: 5 seconds
 
-1. **Authentication**: The script uses OAuth2 PKCE flow to authenticate with Audi Connect
-2. **Token Management**: Access tokens are cached in `~/.audi_tokens.json` and automatically refreshed
-3. **Data Polling**: Vehicle charging status is fetched from the Audi/Cariad API
-4. **Display Update**: Battery data is pushed to AWTRIX as a custom app with:
-   - Vehicle name and percentage
-   - Appropriate battery/charging icon
-   - Color-coded text and progress bar (full = 80%)
-   - 30-minute display lifetime
+### Driving
+- Shows: `Q4 - 75% - 1430` (current time)
+- Icon: Car icon
+- Duration: 30 seconds
 
-## Display Colors
+### Parked Away
+- Shows: `Q4 - 75% - High Street, Cambridge - 1430`
+- Shows: `Q4 - 75% - yesterday` (if parked yesterday)
+- Shows: `Q4 - 75% - 3 days ago` (if older)
+- Icon: Parking icon
+- Duration: 30 seconds
 
-The display uses color-coded indicators to show battery status at a glance:
+## Configuration Constants
 
-- 🟢 **Green** (60% and above): Good charge level
-- 🟠 **Orange** (21%-59%): Medium charge level
-- 🔴 **Red** (20% and below): Low battery
-
-Note: The progress bar scales to show 80% charge as "full" (100% on the bar), which is a common charging target for battery longevity.
-
-## Files
-
-- `audi_awtrix.py` - Main script
-- `audi_connect.py` - Audi Connect API client library
-- `audi_awtrix_config.json` - Configuration file (not included, create your own)
-- `~/.audi_tokens.json` - Cached authentication tokens (auto-generated)
+Edit the constants at the top of `audi_awtrix.py` to customize:
+- `DURATION_AT_HOME` / `DURATION_AWAY`: Display durations
+- `HOME_DISTANCE_THRESHOLD`: Distance in meters to consider "at home" (default: 100m)
+- `COLOR_HIGH_SOC` / `COLOR_MID_SOC` / `COLOR_LOW_SOC`: Status colors
+- `SOC_DISPLAY_MAX`: SoC percentage to show as "full" on progress bar (default: 80%)
 
 ## Troubleshooting
 
-**Authentication fails:**
+**Authentication fails**: Verify credentials and active Audi Connect subscription
 
-- Verify your Audi Connect credentials
-- Ensure your Audi Connect subscription is active
-- Check that you can log in to the myAudi app
+**Display not updating**: Check AWTRIX IP, network connectivity, and downloaded icons
 
-**Display not updating:**
+**Script errors**: Check `/tmp/audi_awtrix.log` and verify VINs in config
 
-- Verify AWTRIX IP address in config
-- Check network connectivity to TC001
-- Ensure icons are downloaded (see AWTRIX Setup)
+## Security
 
-**Script errors:**
-
-- Check logs: `cat /tmp/audi_awtrix.log`
-- Verify VINs in config file match your vehicles
-- Ensure Python dependencies are installed
-
-## Security Notes
-
-- Keep your config file secure (contains credentials)
-- Tokens are stored in your home directory with user-only permissions
-
-## License
-
-MIT License - see [LICENSE](LICENSE) file for details.
+- Keep config file secure (contains credentials)
+- Tokens are auto-cached in `~/.audi_tokens.json` with restricted permissions
 
 ## Credits
 
-Audi Connect API client extracted from the [audiconnect](https://github.com/arjenvrh/audi_connect_ha) Home Assistant integration and adapted for standalone use.
+Built with Claude. Audi Connect API client adapted from [audiconnect](https://github.com/arjenvrh/audi_connect_ha).
 
-Errors in OAuth flow fixed by Claude.
+## License
+
+MIT
