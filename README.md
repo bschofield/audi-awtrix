@@ -1,4 +1,4 @@
-# Audi AWTRIX Battery Monitor
+# Audi AWTRIX Battery and Location Monitor
 
 Display your Audi EV battery status on an AWTRIX 3 display (Ulanzi TC001) with location awareness.
 
