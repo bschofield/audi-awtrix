@@ -69,10 +69,10 @@ Run manually:
 python3 audi_awtrix.py -c audi_awtrix_config.json
 ```
 
-Automate with cron (every 15 minutes):
+Automate with cron (every 15 minutes, keeping last 10k lines of log):
 
 ```cron
-*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/audi_awtrix_config.json > /tmp/audi_awtrix.log 2>&1
+*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/audi_awtrix_config.json >> /tmp/audi_awtrix.log 2>&1; tail -10000 /tmp/audi_awtrix.log > /tmp/audi_awtrix.log.tmp && mv /tmp/audi_awtrix.log.tmp /tmp/audi_awtrix.log
 ```
 
 ## Display Behavior
