@@ -244,7 +244,7 @@ async def main():
 
                             # Get timestamp from parking data
                             from datetime import datetime
-                            parking_time_str = parking_data["data"]["timestamp"]
+                            parking_time_str = parking_data["data"]["carCapturedTimestamp"]
                             parking_time = datetime.fromisoformat(parking_time_str.replace('Z', '+00:00'))
                             time_suffix = parking_time.strftime("%H%M")
 
