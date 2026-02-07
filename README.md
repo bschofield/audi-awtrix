@@ -40,7 +40,7 @@ Display your Audi EV battery status on an AWTRIX 3 display (Ulanzi TC001) with l
 
 ## Configuration
 
-Create `audi_awtrix_config.json`:
+Create `config.json`:
 
 ```json
 {
@@ -53,6 +53,8 @@ Create `audi_awtrix_config.json`:
   },
   "vehicles": {
     "WAUXXXXXXXXXXXXXX": "Q4",
+    "WAUXXXXXXXXXXXXXX": "Q6",
+    "WAUXXXXXXXXXXXXXX": "Q8",
     "WAUXXXXXXXXXXXXXX": "GT"
   }
 }
@@ -66,13 +68,13 @@ Create `audi_awtrix_config.json`:
 Run manually:
 
 ```bash
-python3 audi_awtrix.py -c audi_awtrix_config.json
+python3 audi_awtrix.py -c config.json
 ```
 
 Automate with cron (every 15 minutes, keeping last 10k lines of log):
 
 ```cron
-*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/audi_awtrix_config.json >> /tmp/audi_awtrix.log 2>&1; tail -10000 /tmp/audi_awtrix.log > /tmp/audi_awtrix.log.tmp && mv /tmp/audi_awtrix.log.tmp /tmp/audi_awtrix.log
+*/15 * * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/config.json >> /tmp/audi_awtrix.log 2>&1; tail -10000 /tmp/audi_awtrix.log > /tmp/audi_awtrix.log.tmp && mv /tmp/audi_awtrix.log.tmp /tmp/audi_awtrix.log
 ```
 
 ## Display Behavior
