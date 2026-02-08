@@ -89,7 +89,7 @@ Automate with cron (every 15 minutes, keeping last 10k lines of log):
 
 - Shows: `Q4 75%`.
 - Icon: Battery level or charging icon.
-- Duration: 5 seconds.
+- Duration: 8 seconds.
 
 ### Driving
 
