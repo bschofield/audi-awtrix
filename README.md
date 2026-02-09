@@ -77,7 +77,7 @@ Run with geocode caching (recommended):
 python3 audi_awtrix.py -c config.json -g geocode.sqlite3
 ```
 
-Automate with cron (every 15 minutes between 08:30–23:45):
+Automate with cron (every 15 minutes between 08:00–23:45):
 
 ```cron
 */15 8-23 * * * /usr/bin/python3 /path/to/audi_awtrix.py -c /path/to/config.json -g /path/to/geocode.sqlite3 >> /path/to/audi_awtrix.log 2>&1
@@ -111,7 +111,7 @@ Messages have a 15-minute lifetime and disappear from the display if not refresh
 
 Edit the constants at the top of `audi_awtrix.py` to customize:
 
-- `DURATION_AT_HOME` / `DURATION_AWAY`: Display durations.
+- `DURATION_HOME` / `DURATION_DRIVING` / `DURATION_PARKED`: Display durations.
 - `HOME_DISTANCE_THRESHOLD`: Distance in meters to consider "at home" (default: 100m).
 - `COLOR_HIGH_SOC` / `COLOR_MID_SOC` / `COLOR_LOW_SOC`: Status colors.
 - `SOC_DISPLAY_MAX`: SoC percentage to show as "full" on progress bar (default: 80%).

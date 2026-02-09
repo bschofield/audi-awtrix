@@ -255,21 +255,9 @@ class AudiConnect:
 
         log(f"Got relayState: {relay_state}")
 
-        # Step 3: Submit password directly to authenticate endpoint
-        # The authenticate endpoint expects POST with password
-        auth_url = f"https://identity.vwgroup.io/signin-service/v1/{CLIENT_ID}/login/authenticate"
-
-        password_data = {
-            "relayState": relay_state,
-            "password": self.password,
-            "email": self.username,
-            "_csrf": hidden_fields.get("_csrf", ""),
-            "hmac": hidden_fields.get("hmac", ""),
-        }
-
-        # GET the authenticate page to extract window._IDK data
+        # Step 3: GET the authenticate page to extract window._IDK data
         auth_page_url = f"https://identity.vwgroup.io/signin-service/v1/{CLIENT_ID}/login/authenticate?relayState={relay_state}&email={self.username}"
-        log(f"\nFetching authenticate page: {auth_page_url[:80]}...")
+        log(f"Fetching authenticate page: {auth_page_url[:80]}...")
 
         async with self.session.get(auth_page_url, headers=headers) as resp:
             log(f"Authenticate page status: {resp.status}")
@@ -306,7 +294,7 @@ class AudiConnect:
             "hmac": new_hmac,
         }
 
-        log(f"\nSubmitting password to {auth_url}")
+        log(f"Submitting password to {auth_url}")
         async with self.session.post(
             auth_url,
             data=password_data,
@@ -524,20 +512,10 @@ class AudiConnect:
     async def get_vehicles(self):
         """Get list of vehicles from cariad.digital API."""
         url = "https://emea.bff.cariad.digital/vehicle/v1/vehicles"
-
-        headers = {
-            "User-Agent": USER_AGENT,
-            "Authorization": f"Bearer {self.access_token}",
-            "Accept": "application/json",
-            "X-Client-Id": X_CLIENT_ID,
-        }
-
-        async with self.session.get(url, headers=headers) as resp:
-            if resp.status != 200:
-                text = await resp.text()
-                raise Exception(f"Failed to get vehicles: {resp.status} - {text}")
-
-            return await resp.json()
+        status, text = await self.authenticated_get(url)
+        if status != 200:
+            raise Exception(f"Failed to get vehicles: {status} - {text}")
+        return json.loads(text)
 
 
 async def main():
@@ -551,7 +529,7 @@ async def main():
     async with AudiConnect(args.username, args.password) as audi:
         await audi.login()
 
-        log("\nGetting vehicles...")
+        log("Getting vehicles...")
         vehicles = await audi.get_vehicles()
         print(json.dumps(vehicles, indent=2))
 
