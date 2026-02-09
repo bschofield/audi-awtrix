@@ -505,6 +505,22 @@ class AudiConnect:
         await self._get_mbb_token()
         self._save_tokens()
 
+    async def authenticated_get(self, url):
+        """Authenticated GET with auto-refresh on 401."""
+        for attempt in range(2):
+            headers = {
+                "User-Agent": USER_AGENT,
+                "Authorization": f"Bearer {self.access_token}",
+                "Accept": "application/json",
+                "X-Client-Id": X_CLIENT_ID,
+            }
+            async with self.session.get(url, headers=headers) as resp:
+                if resp.status == 401 and attempt == 0:
+                    log("Token expired, refreshing...")
+                    await self._refresh_tokens()
+                    continue
+                return resp.status, await resp.text()
+
     async def get_vehicles(self):
         """Get list of vehicles from cariad.digital API."""
         url = "https://emea.bff.cariad.digital/vehicle/v1/vehicles"

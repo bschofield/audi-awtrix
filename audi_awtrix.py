@@ -23,10 +23,9 @@ BATTERY_ICON_CHARGING = "21585"
 BATTERY_ICON_DRIVING = "1172"
 BATTERY_ICON_PARKED = "70271"
 
-# API endpoints and credentials
+# API endpoints
 STATUS_URL = "https://emea.bff.cariad.digital/vehicle/v1/vehicles/{vin}/selectivestatus?jobs=charging"
 PARKING_URL = "https://emea.bff.cariad.digital/vehicle/v1/vehicles/{vin}/parkingposition"
-X_CLIENT_ID = "77869e21-e30a-4a92-b016-48ab7d3db1d8"
 
 # Display configuration
 DURATION_HOME = 8 # seconds
@@ -294,40 +293,28 @@ def push_app(awtrix_url: str, name: str, soc: int, charging: bool, icon: str = N
             return text
         except requests.exceptions.RequestException as e:
             if attempt < AWTRIX_RETRIES:
-                log.warning(f"AWTRIX push attempt {attempt}/{AWTRIX_RETRIES} failed: {e}")
+                log(f"AWTRIX push attempt {attempt}/{AWTRIX_RETRIES} failed: {e}")
             else:
                 raise
 
 
 async def get_soc(audi, vin: str) -> dict:
     url = STATUS_URL.format(vin=vin)
-    headers = {
-        "Authorization": f"Bearer {audi.access_token}",
-        "Accept": "application/json",
-        "X-Client-Id": X_CLIENT_ID,
-    }
-    async with audi.session.get(url, headers=headers) as resp:
-        if resp.status not in (200, 207):
-            text = await resp.text()
-            raise Exception(f"{vin}: HTTP {resp.status} - {text}")
-        return await resp.json()
+    status, text = await audi.authenticated_get(url)
+    if status not in (200, 207):
+        raise Exception(f"{vin}: HTTP {status} - {text}")
+    return json.loads(text)
 
 
 async def get_parking_position(audi, vin: str) -> dict:
     """Get parking position. Returns None if car is driving (204 response)."""
     url = PARKING_URL.format(vin=vin)
-    headers = {
-        "Authorization": f"Bearer {audi.access_token}",
-        "Accept": "application/json",
-        "X-Client-Id": X_CLIENT_ID,
-    }
-    async with audi.session.get(url, headers=headers) as resp:
-        if resp.status == 204:
-            return None  # Car is driving
-        if resp.status == 200:
-            return await resp.json()
-        text = await resp.text()
-        raise Exception(f"{vin}: HTTP {resp.status} - {text}")
+    status, text = await audi.authenticated_get(url)
+    if status == 204:
+        return None  # Car is driving
+    if status == 200:
+        return json.loads(text)
+    raise Exception(f"{vin}: HTTP {status} - {text}")
 
 
 async def main():
