@@ -341,10 +341,11 @@ async def main():
         for vin, name in config["vehicles"].items():
             try:
                 data = await get_soc(audi, vin)
-                soc = data["charging"]["batteryStatus"]["value"]["currentSOC_pct"]
-                charging_state = data["charging"]["chargingStatus"]["value"][
-                    "chargingState"
-                ]
+                battery_status = data["charging"]["batteryStatus"]["value"]
+                charging_status = data["charging"]["chargingStatus"]["value"]
+                soc = battery_status["currentSOC_pct"]
+                charging_state = charging_status["chargingState"]
+                log(f"{name}: SoC={soc}% state={charging_state} batteryTs={battery_status['carCapturedTimestamp']} chargingTs={charging_status['carCapturedTimestamp']}")
                 is_charging = charging_state not in (
                     "notReadyForCharging",
                     "readyForCharging",
@@ -360,6 +361,7 @@ async def main():
                 if home_lat is not None and home_lon is not None:
                     parking_data = await get_parking_position(audi, vin)
                     if parking_data is None:
+                        log(f"{name}: parking=driving (204)")
                         # Car is driving - use current time
                         icon = BATTERY_ICON_DRIVING
                         time_suffix = datetime.now().strftime("%H%M")
@@ -368,6 +370,7 @@ async def main():
                         status_msg = f"driving - {time_suffix}"
                     else:
                         # Car is parked, check if away from home
+                        log(f"{name}: parkingTs={parking_data['data']['carCapturedTimestamp']}")
                         car_lat = parking_data["data"]["lat"]
                         car_lon = parking_data["data"]["lon"]
                         distance = haversine_distance(home_lat, home_lon, car_lat, car_lon)
