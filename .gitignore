@@ -1,2 +1,6 @@
-audi_awtrix_config.json
 __pycache__
+
+config.json
+geocode.sqlite3
+
+audi_awtrix.log
