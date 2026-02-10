@@ -489,9 +489,10 @@ class AudiConnect:
         await self._get_mbb_token()
         self._save_tokens()
 
-    async def authenticated_get(self, url):
-        """Authenticated GET with auto-refresh on 401."""
-        for attempt in range(2):
+    async def authenticated_get(self, url, max_retries=3):
+        """Authenticated GET with auto-refresh on 401 and retry on 5xx."""
+        refreshed = False
+        for attempt in range(max_retries):
             headers = {
                 "User-Agent": USER_AGENT,
                 "Authorization": f"Bearer {self.access_token}",
@@ -499,9 +500,15 @@ class AudiConnect:
                 "X-Client-Id": X_CLIENT_ID,
             }
             async with self.session.get(url, headers=headers) as resp:
-                if resp.status == 401 and attempt == 0:
+                if resp.status == 401 and not refreshed:
                     log("Token expired, refreshing...")
                     await self._refresh_tokens()
+                    refreshed = True
+                    continue
+                if 500 <= resp.status < 600 and attempt < max_retries - 1:
+                    delay = 2 ** attempt
+                    log(f"Got {resp.status}, retrying in {delay}s (attempt {attempt + 1}/{max_retries})...")
+                    await asyncio.sleep(delay)
                     continue
                 return resp.status, await resp.text()
 
