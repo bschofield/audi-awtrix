@@ -365,9 +365,11 @@ async def main():
                     parking_data = await get_parking_position(audi, vin)
                     if parking_data is None:
                         log(f"{name}: parking=driving (204)")
-                        # Car is driving - use current time
+                        # Car is driving - use battery measurement timestamp
                         icon = BATTERY_ICON_DRIVING
-                        time_suffix = datetime.now().strftime("%H%M")
+                        battery_time_utc = datetime.fromisoformat(battery_status['carCapturedTimestamp'].replace('Z', '+00:00'))
+                        battery_time = battery_time_utc.astimezone()
+                        time_suffix = battery_time.strftime("%H%M")
                         location = time_suffix
                         duration = DURATION_DRIVING
                         status_msg = f"driving - {time_suffix}"
