@@ -319,7 +319,7 @@ async def get_parking_position(audi, vin: str) -> dict:
     """Get parking position. Returns None if car is driving (204 response)."""
     url = PARKING_URL.format(vin=vin)
     status, text = await audi.authenticated_get(url)
-    if status == 204:
+    if status == 204 or status == 404:
         return None  # Car is driving
     if status == 200:
         return json.loads(text)
