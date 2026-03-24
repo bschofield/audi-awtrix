@@ -32,6 +32,7 @@ Display your Audi EV battery status on an AWTRIX 3 display (Ulanzi TC001) with l
    - **Driving**: 1172
    - **Parked**: 70271
    - **Error**: 33180
+   - **Unknown status**: 62293
 
 3. (Optional) Disable default AWTRIX apps:
    ```bash
@@ -99,6 +100,13 @@ Messages have a 15-minute lifetime and disappear from the display if not refresh
 - Shows: `Q4 - 75% - 1430` (current time).
 - Icon: Car icon (charging icon if charging, error icon if error state).
 - Duration: 8 seconds.
+
+### Parking Status Unknown
+
+- Shows: `Q4 75%` (same as at home).
+- Icon: Unknown status icon (62293).
+- Duration: 8 seconds.
+- Triggered when the API returns 404 for the parking position endpoint.
 
 ### Connection Error
 

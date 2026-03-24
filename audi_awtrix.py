@@ -22,6 +22,10 @@ BATTERY_ICON_CHARGING = "21585"
 BATTERY_ICON_DRIVING = "1172"
 BATTERY_ICON_PARKED = "70271"
 BATTERY_ICON_ERROR = "33180"
+BATTERY_ICON_UNKNOWN = "62293"
+
+# Sentinel returned by get_parking_position when status is unknown (404)
+PARKING_UNKNOWN = object()
 
 # API endpoints
 STATUS_URL = "https://emea.bff.cariad.digital/vehicle/v1/vehicles/{vin}/selectivestatus?jobs=charging"
@@ -316,13 +320,15 @@ async def get_soc(audi, vin: str) -> dict:
 
 
 async def get_parking_position(audi, vin: str) -> dict:
-    """Get parking position. Returns None if car is driving (204 response)."""
+    """Get parking position. Returns None if car is driving (204), 'unknown' if status unknown (404)."""
     url = PARKING_URL.format(vin=vin)
     status, text = await audi.authenticated_get(url)
-    if status == 204 or status == 404:
+    if status == 204:
         return None  # Car is driving
     if status == 200:
         return json.loads(text)
+    if status == 404:
+        return PARKING_UNKNOWN  # Parking/driving status unavailable
     raise Exception(f"{vin}: HTTP {status} - {text}")
 
 
@@ -363,7 +369,10 @@ async def main():
 
                 if home_lat is not None and home_lon is not None:
                     parking_data = await get_parking_position(audi, vin)
-                    if parking_data is None:
+                    if parking_data is PARKING_UNKNOWN:
+                        log(f"{name}: parking=unknown (404)")
+                        icon = BATTERY_ICON_UNKNOWN
+                    elif parking_data is None:
                         log(f"{name}: parking=driving (204)")
                         # Car is driving - use battery measurement timestamp
                         icon = BATTERY_ICON_DRIVING
