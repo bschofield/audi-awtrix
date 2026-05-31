@@ -15,10 +15,12 @@ Endpoints:
 
 import asyncio
 import aiohttp
+import hmac as hmac_mod
 import json
 import hashlib
 import base64
 import secrets
+import time
 import re
 from html.parser import HTMLParser
 from urllib.parse import urlencode, urlparse, parse_qs
@@ -26,7 +28,25 @@ from pathlib import Path
 from datetime import datetime, timedelta
 
 # API URLs
-OPENID_CONFIG_URL = "https://emea.bff.cariad.digital/login/v1/idk/openid-configuration"
+OPENID_CONFIG_URL = "https://emea.bff.cariad.digital/auth/v1/idk/oidc/openid-configuration"
+
+# X-QMAuth secret used by the myAudi Android app to authenticate token requests
+# to the cariad.digital BFF (mirrors upstream audi_connect_ha).
+_XQMAUTH_SECRET = bytes([
+    26, 182, 153, 37, 172, 23, 154, 170, 78, 131, 171, 230, 113, 169, 71, 109,
+    23, 100, 24, 184, 91, 215, 6, 241, 67, 108, 161, 91, 230, 71, 152, 156,
+])
+
+
+def calculate_x_qmauth() -> str:
+    """Compute the X-QMAuth header expected by the IDK token endpoint."""
+    gmtime_100sec = int(time.time() / 100)
+    digest = hmac_mod.new(
+        _XQMAUTH_SECRET,
+        str(gmtime_100sec).encode("ascii"),
+        digestmod="sha256",
+    ).hexdigest()
+    return "v1:01da27b0:" + digest
 MBB_OAUTH_BASE_URL = "https://mbboauth-1d.prd.ece.vwg-connect.com/mbbcoauth"
 
 # App credentials (from myAudi app)
@@ -410,7 +430,11 @@ class AudiConnect:
         async with self.session.post(
             self.openid_config["token_endpoint"],
             data=token_data,
-            headers={**headers, "Content-Type": "application/x-www-form-urlencoded"},
+            headers={
+                **headers,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-QMAuth": calculate_x_qmauth(),
+            },
         ) as resp:
             if resp.status != 200:
                 text = await resp.text()
@@ -474,7 +498,10 @@ class AudiConnect:
         async with self.session.post(
             self.openid_config["token_endpoint"],
             data=token_data,
-            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            headers={
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-QMAuth": calculate_x_qmauth(),
+            },
         ) as resp:
             if resp.status != 200:
                 raise Exception(f"Token refresh failed: {resp.status}")
