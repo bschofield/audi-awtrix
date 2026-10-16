@@ -1,5 +1,7 @@
 # Audi AWTRIX Battery and Location Monitor
 
+> **Broken since October 2026:** Audi has blocked headless logins to Audi Connect. See [AUTH_STATUS.md](AUTH_STATUS.md).
+
 Display your Audi EV battery status on an AWTRIX 3 display (Ulanzi TC001) with location awareness.
 
 ![Example Display](awtrix.png)
